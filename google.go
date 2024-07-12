@@ -93,6 +93,10 @@ func (g *Google) AutoFlush() chan bool {
 	return done
 }
 
+func (g *Google) Flush() error {
+	return g.logger.Flush()
+}
+
 func (g *Google) init() {
 	if g.client == nil || g.logger == nil {
 		ctx := context.Background()
