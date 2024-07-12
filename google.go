@@ -99,7 +99,7 @@ func (g *Google) AutoFlush() chan bool {
 }
 
 func (g *Google) Flush() error {
-	if g.logger != nil {
+	if g != nil && g.logger != nil {
 		return g.logger.Flush()
 	}
 	return ErrUninitializedLogger
