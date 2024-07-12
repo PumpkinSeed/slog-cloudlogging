@@ -2,6 +2,7 @@ package slogcloudlogging
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -10,6 +11,10 @@ import (
 
 const (
 	DefaultGoogleAutoFlushInterval = 500
+)
+
+var (
+	ErrUninitializedLogger = errors.New("uninitialized logger error")
 )
 
 type Google struct {
@@ -94,7 +99,10 @@ func (g *Google) AutoFlush() chan bool {
 }
 
 func (g *Google) Flush() error {
-	return g.logger.Flush()
+	if g.logger != nil {
+		return g.logger.Flush()
+	}
+	return ErrUninitializedLogger
 }
 
 func (g *Google) init() {
