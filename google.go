@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/logging"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -24,8 +25,10 @@ type Google struct {
 	client            *logging.Client
 	logger            *logging.Logger
 
-	Handler        slog.Handler
-	ForwardHandler bool
+	Handler                slog.Handler
+	ForwardHandler         bool
+	UseOpenTelemetryTracer bool
+	TracePrefix            string
 }
 
 type Line struct {
@@ -35,7 +38,7 @@ type Line struct {
 	Data      map[string]interface{} `json:"data,omitempty"`
 }
 
-func (g *Google) Print(main Line) {
+func (g *Google) Print(ctx context.Context, main Line) {
 	// Make sure we have a set google client
 	g.init()
 
@@ -64,11 +67,21 @@ func (g *Google) Print(main Line) {
 		}
 	}
 
-	// Adds an entry to the log buffer.
-	g.logger.Log(logging.Entry{
+	entry := logging.Entry{
 		Severity: severity,
 		Payload:  payload,
-	})
+	}
+
+	if g.UseOpenTelemetryTracer {
+		if s := trace.SpanContextFromContext(ctx); s.IsValid() {
+			entry.Trace = g.TracePrefix + s.TraceID().String()
+			entry.SpanID = s.SpanID().String()
+			entry.TraceSampled = s.TraceFlags().IsSampled()
+		}
+	}
+
+	// Adds an entry to the log buffer.
+	g.logger.Log(entry)
 }
 
 func (g *Google) AutoFlush() chan bool {

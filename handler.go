@@ -45,7 +45,7 @@ func (g *Google) Handle(ctx context.Context, record slog.Record) error {
 		Time:      record.Time.Format(time.RFC3339),
 		Data:      data,
 	}
-	g.Print(l)
+	g.Print(ctx, l)
 
 	if g.ForwardHandler {
 		return g.Handler.Handle(ctx, record)
