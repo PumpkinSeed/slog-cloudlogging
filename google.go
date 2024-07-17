@@ -28,6 +28,7 @@ type Google struct {
 	Handler                slog.Handler
 	ForwardHandler         bool
 	UseOpenTelemetryTracer bool
+	TracePrefix            string
 }
 
 type Line struct {
@@ -73,7 +74,7 @@ func (g *Google) Print(ctx context.Context, main Line) {
 
 	if g.UseOpenTelemetryTracer {
 		if s := trace.SpanContextFromContext(ctx); s.IsValid() {
-			entry.Trace = s.TraceID().String()
+			entry.Trace = g.TracePrefix + s.TraceID().String()
 			entry.SpanID = s.SpanID().String()
 			entry.TraceSampled = s.TraceFlags().IsSampled()
 		}
